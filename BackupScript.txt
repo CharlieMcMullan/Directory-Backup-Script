@@ -1,7 +1,7 @@
  #!/bin/bash
 
 #Test command
-#sudo ./CNSM_Backup_Script home/charlie/Desktop/Test_Backup_Dir home/Destination_CNSM2_Backups
+#sudo ./Backup_Script home/charlie/Desktop/Test_Backup_Dir home/Destination_CNSM2_Backups
 
  #Varibles
     #The two comments below were use to test the script before using arguments as the file pathways.
