@@ -1,0 +1,147 @@
+ #!/bin/bash
+
+#Test command
+#sudo ./CNSM_Backup_Script home/charlie/Desktop/Test_Backup_Dir home/Destination_CNSM2_Backups
+
+ #Varibles
+    #The two comments below were use to test the script before using arguments as the file pathways.
+    #Source=home/charlie/Desktop/Test_Backup_Dir
+    #Destination=home/Destination_CNSM2_Backups
+    Source=$1
+    Destination=$2
+    logDes=/var/log/TUS/backups.log
+
+    error="ERROR! PROGRAM TERMINATED"
+#Prompt on Startup
+    echo " "
+    echo "This script was created for backups"
+    echo "Author: Charlie McMullan | Student ID: K00275725"
+    echo "This script requires no user input"
+    echo "Source Backup Dirctory:" $Source
+    echo "Destination Backup Dirctory:" $Destination
+    echo " "
+
+    root="root user check:"
+    #Checks if user is root. Script acces var files and needs to be root
+        #Root's user ID is 0 therefore, if not 0, it's isn't root
+        if [[ $EUID == 0 ]]
+            then
+            echo $root "Successful"
+             echo " "
+        else
+            echo $root "Failed"
+            echo "This script must be run as root, put 'sudo' before command"
+            echo $error
+            exit
+        fi
+
+#I put all the required tests together to run before the secript
+    #These are text varibles to allow strings to be re-used
+    status="Backup Dirctory Status:"
+
+    echo " "
+    echo "Pre-script Directory Tests"
+#Test source dir exists
+    if [[ -d "$Source" ]]
+        then
+        echo "Source" $status "Exists"
+    else
+        echo "Source" $status "Cannot be found"
+        echo $error
+        exit
+    fi
+#Test destination dir exists
+    if [[ -d "$Destination" ]]
+        then
+        echo "Destination" $status "Exists"
+        if [[ -w "$Destination" ]]
+            then
+            echo "Destination Dirctory is: Writable"
+        else
+            echo "Destination Dirctory is: Unwritable"
+            echo $error
+            exit
+        fi
+    else
+        echo "Destination" $status "Cannot be found"
+        echo $error
+        exit
+    fi
+#Tests Log file Destination
+    if [[ -e "$logDes" ]]
+        then
+        echo "Log Destination" $status "Exists"
+        if [[ -w "$logDes" ]]
+            then
+            echo "Log Destination Dirctory is: Writable"
+        else
+            echo "Log Destination Dirctory is: Unwritable"
+            echo $error
+            exit
+        fi
+    else
+        echo "Log Destination" $status "Cannot be found"
+        echo $error
+        exit
+    fi
+
+
+#Tar Backup
+    #These varibles are for the TAR file name and two for time
+    #I made two for time as one has specail characters and one does not
+    #Filestamp doesn't have specail characters as it is a file name
+    FileStamp=$(date +"%Y%m%d_%H%M")
+    name=CNSM2_
+    TarFile=CNSM2Backup_${FileStamp}.tar.bz2
+
+    echo " "
+    echo "TAR Backup to:" $Destination
+    echo "Author: Charlie McMullan | Student ID: K00275725"
+    echo "TAR Start Time:" $(date +"%Y/%m/%d %H:%M:%S")
+    #this create the tar file while the command below moves it to the destination file
+    tar -cvjf "$TarFile" $Source
+    mv $TarFile $Destination
+    echo "TAR Finish Time:" $(date +"%Y/%m/%d %H:%M:%S")
+    echo " "
+
+#Log file
+    echo " "
+    echo "Script activation logged to:" $logDes
+    #This puts a empty line between log entries
+    echo " ">> $logDes
+    #This sends a timestamp to the log file
+    echo "Script preformed by "$USER $TimeStamp>> $logDes
+    echo "Start of list">> $logDes
+    #this sends the ls of the backup file to the log
+    ls -l $Destination/$TarFile >> $logDes
+    echo "End of list">> $logDes
+    #This identifies the user who ran the script, as it is ran under sudo
+    #root is identifed as the user but $SUDO_USER identifies who ran sudo command
+    echo "User who ran sudo for script: " $SUDO_USER>> $logDes
+    echo " ">> $logDes
+
+    echo " "
+
+#Tests if tar file exists
+    if [[ -e "$Destination/$TarFile" ]]
+        then
+        echo "Backup file: Successful"
+
+                        #Search log file for matching tarfile name, if true log was successful
+                        if grep -q "$TarFile" $logDes; then
+
+                        echo "Log file: Successful"
+                        echo "Script Status: Complete"
+                        else
+                        echo "Log file: Failed"
+                        echo "Script Status: Failed"
+                        echo $error
+                        fi
+
+    else
+        echo "Backup file: Failed"
+        echo "Script Status: Failed"
+        echo $error
+        exit
+    fi
+    echo " "

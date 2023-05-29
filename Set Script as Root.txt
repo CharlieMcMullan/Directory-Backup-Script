@@ -1,0 +1,15 @@
+sudo chown root Test_Backup_Dir 
+
+
+root="root user check:"
+#Checks if user is root. Script acces var files and needs to be root
+    #Root's user ID is 0 therefore, if not 0, it's isn't root
+    if [[ $EUID == 0 ]]
+        then
+        echo $root "Successful"
+    else
+        echo $root "Failed"
+        echo "This script must be run as root, put 'sudo' before command"
+        echo $error
+        exit
+    fi
